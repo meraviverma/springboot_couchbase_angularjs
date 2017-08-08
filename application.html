@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+		 <title>
+            AngularJS - REST Demo
+        </title>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+		<script> 
+		var app = angular.module("TopicManagement", []);
+		//Controller Part
+            app.controller("TopicManagementController", function($scope, $http) {
+			
+			$scope.form = {
+                    flag : -1,
+                    id : "",
+                    name : "",
+                    description : ""
+                };
+			     //Now load the data from server
+                _refreshPageData();
+				
+				$scope.submitTopic = function() {
+				var method = "";
+                var url = "";
+				if($scope.form.flag==-1){
+					method = "POST";
+					url = "http://localhost:8080/topics";}
+				else{
+					method = "PUT";
+					url = 'http://localhost:8080/topics/' + $scope.form.id;
+					}
+					$http({
+                        method : method,
+                        url : url,
+                        data : angular.toJson($scope.form),
+                        headers : {
+                            'Content-Type' : 'application/json'
+                        }
+                    }).then( _success, _error );
+				};
+				
+				//HTTP DELETE- delete topic by Id
+                $scope.removeTopic = function(topic) {
+                    $http({
+                        method : 'DELETE',
+                        url : 'http://localhost:8080/topics/' + topic.id
+                    }).then(_success, _error);
+                };
+				//HTTP EDIT- edit topic by Id
+				$scope.editTopic = function(topic) {
+                    $scope.form.id =topic.id;
+                    $scope.form.name = topic.name;
+                    $scope.form.description = topic.description;
+					$scope.form.flag=0;
+                    
+                };
+				/* Private Methods */
+                //HTTP GET- get all topic collection
+                function _refreshPageData() {
+                    $http({
+                        method : 'GET',
+                        url : 'http://localhost:8080/topics'
+                    }).then(function successCallback(response) {
+                        $scope.topics = response.data;
+                    }, function errorCallback(response) {
+                        console.log(response.statusText);
+                    });
+                }
+				
+				function _success(response) {
+					_refreshPageData();
+                    _clearForm();
+					console.log($scope.form.flag);
+                }
+         
+                function _error(response) {
+				console.log($scope.form.flag);
+                    console.log(response.statusText);
+					
+                }
+				function _clearForm() {
+                    $scope.form.id = "";
+                    $scope.form.name = "";
+                    $scope.form.description = "";
+					$scope.form.flag=-1;
+                    
+                };
+			});
+		
+		</script>
+		<style>
+            .button {
+                cursor: pointer;
+                color: blue;
+				color: #00bfff;
+            }
+            td,th{
+                border: 1px solid gray;
+                width: 25%;
+                text-align: left;
+            }
+            table {
+                width: 600px;
+            }
+			h2 {
+				color: #00bfff;
+				text-align: left;
+				font-family: verdana;
+				font-size: 18px;
+			}
+        </style>
+		</head>
+		<body ng-app="TopicManagement" ng-controller="TopicManagementController">
+			<form ng-submit="submitTopic()">
+				<table>
+					<tr>
+						<td>Id:</td>
+						<td><input type="text" ng-model="form.id" size="60" /></td>
+					</tr>
+					<tr>
+						<td>Name:</td>
+						<td><input type="text" ng-model="form.name" size="60" /></td>
+					</tr>
+					<tr>
+						<td>Description:</td>
+						<td><input type="text" ng-model="form.description" size="60" /></td>
+					</tr>
+					<tr>
+						<td colspan="2"><input type="submit" value="Submit" /></td>
+					</tr>
+				</table>
+			</form>
+			<h2>Topics:</h2>
+			<table>
+				<tr>
+					<th>ID</th>
+					<th>NAME</th>
+					<th>DESCRIPTION</th>
+					<th>ACTIONS</th>
+				</tr>
+ 
+				<tr ng-repeat="topic in topics">
+					<td>{{ topic.id }}</td>
+					<td>{{ topic.name }}</td>
+					<td>{{ topic.description }}</td>
+					<td><a ng-click="editTopic( topic )" class="button">Edit</a> | <a ng-click="removeTopic( topic )" class="button">Remove</a></td>
+				</tr>
+ 
+			</table>
+		</body>
+</html>
